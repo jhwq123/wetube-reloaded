@@ -1,0 +1,8 @@
+extends base
+include mixins/video
+
+block content 
+    each banana in videos
+        +video(banana)
+    else
+        li Sorry nothing Found.
