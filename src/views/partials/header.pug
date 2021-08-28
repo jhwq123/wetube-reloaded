@@ -19,7 +19,7 @@ header
                             span 🙂
                         else
                             if loggedInUser.avatarUrl
-                                img.header__avatar(src=loggedInUser.avatarUrl, crossorigin)
+                                img.header__avatar(src=loggedInUser.avatarUrl)
                         span #{loggedInUser.name} Profile      
             else
                 li 
