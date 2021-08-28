@@ -6,6 +6,9 @@ header {
     .header__logo {
         color:$red;
         font-size: 38px;
+        .fab.fa-youtube {
+            font-size: 40px;
+        }
     }
     ul {
         display: flex;

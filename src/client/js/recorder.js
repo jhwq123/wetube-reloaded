@@ -1,5 +1,5 @@
 import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
-const actionBtn = document.getElementById("startBtn");
+const actionBtn = document.getElementById("actionBtn");
 const video = document.getElementById("preview");
 
 const files = {
@@ -25,7 +25,7 @@ const handleDownload = async () => {
     actionBtn.innerText = "Transcoding...";
     actionBtn.disabled = true;
 
-    const ffmpeg = createFFmpeg({ log: true });
+    const ffmpeg = createFFmpeg({ log: true, corePath: "/static/ffmpeg-core.js", });
     await ffmpeg.load();
 
     ffmpeg.FS("writeFile", files.input, await fetchFile(videoFile));
@@ -62,7 +62,7 @@ const handleDownload = async () => {
 const handleStop = () => {
     actionBtn.innerText = "Download Recording";
     actionBtn.removeEventListener("click", handleStop);
-    actionBtn.addEventListener("click", handleStart);
+    actionBtn.addEventListener("click", handleDownload);
     recorder.stop();
 };
 
@@ -70,7 +70,7 @@ const handleStart = () => {
     actionBtn.innerText = "Stop Recording";
     actionBtn.removeEventListener("click", handleStart);
     actionBtn.addEventListener("click", handleStop);
-    recorder = new MediaRocorder(stream);
+    recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
     recorder.ondataavailable = (event) => {
         videoFile = URL.createObjectURL(event.data);
         video.srcObject = null;
@@ -83,8 +83,8 @@ const handleStart = () => {
 
 const init = async () => {
     stream = await navigator.mediaDevices.getUserMedia({
-        audio:true, 
-        video: { width: 600, height: 300 },
+        audio: false, 
+        video: { width: 1024, height: 576 },
     });
     video.srcObject = stream;
     video.play();

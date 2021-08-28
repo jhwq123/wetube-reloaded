@@ -55,7 +55,7 @@ export const getUpload = (req, res) => {
 
 export const postUpload = async (req, res) => {
   const { user: { _id }, } = req.session;
-  const { video, thumb } = req.file;
+  const { video, thumb } = req.files;
   const { title, description, hashtags } = req.body;
 
   const newVideo = await Video.create({
@@ -75,7 +75,7 @@ export const postUpload = async (req, res) => {
 
 export const deleteVideo = async (req, res) => {
   const { id } = req.params;
-  const { user: { _id } } = req.sessions;
+  const { user: { _id } } = req.session;
   const video = await Video.findById(id);
   if (!video) {
     return res.status(404).render("404", { pageTitle: "Video not found." });
@@ -98,13 +98,13 @@ export const search = async (req, res) => {
       },
     }).populate("owner");
   }
-  return res.rendeer("search", { pageTitle: "Search", videos });
+  return res.render("search", { pageTitle: "Search", videos });
 };
 
-export const resistorView = async (req, res) => {
+export const registerView = async (req, res) => {
   const { id } = req.params;
   const video = await Video.findById(id);
-  if(video) {
+  if(!video) {
     return res.sendStatus(404);
   }
   video.meta.views = video.meta.views + 1;
@@ -129,5 +129,17 @@ export const createComment = async (req, res) => {
   });
   video.comments.push(comment._id);
   video.save();
-  return res.sendStatus(201).json({ newCommentId: comment._id });
+  return res.status(201).json({ newCommentId: comment._id });
 };
+
+export const deleteComment = async (req, res) => {
+  const {
+    body: { commentId },
+  } = req;
+  const comment = await Comment.findById(commentId);
+  if (!comment) {
+    return res.sendStatus(404);
+  }
+  await Comment.findByIdAndDelete(commentId);
+  return res.sendStatus(201);
+}

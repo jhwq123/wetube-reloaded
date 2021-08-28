@@ -1,8 +1,6 @@
 import User from "../models/User";
-import Video from "../models/Video";
 import fetch from "node-fetch";
 import bcrypt from "bcrypt";
-import { request } from "express";
 
 export const getJoin = (req, res) => {
     return res.render("join", { pageTitle: "Join" });
@@ -34,7 +32,7 @@ export const getLogin = (req, res) => {
 export const postLogin = async (req, res) => {
     const { username, password } = req.body;
     const pageTitle = "Login";
-    const user = await User.findOne({ username, socialOnly: flase });
+    const user = await User.findOne({ username, socialOnly: false });
     if(!user){
         return res.status(400).render("login", { pageTitle, errorMessage: "An account with this username does not exist." });
     }
@@ -113,7 +111,6 @@ export const finishGithubLogin = async (req, res) => {
 
 export const logout = (req, res) => {
     req.session.destroy();
-    req.flash("info", "Bye Bye");
     return res.redirect("/");
 }
 
@@ -124,28 +121,30 @@ export const getEdit = (req, res) => {
 export const postEdit = async (req, res) => {
     const {
         session: {
-            user: { _id, avatarUrl },
+            user: { _id, avatarUrl, email: searchEmail, username: searchUsername },
         },
-        body: { name, email, username },
-        file: { path },
+        body: { name, email, username, location },
+        file,
     } = req;
-    // 이부분에 문제가 생긴다면, 다시 생각하고 복습해서 고치도록 할 것.
-    const existsName = await User.exists({name});
-    if(existsName){
-        return res.status(400).render("edit-profile", { pageTitle: "Edit Profile", errorMessage: "This name is already taken." });
-    };
+
     const existsUser = await User.exists({username});
     if(existsUser){
-        return res.status(400).render("edit-profile", { pageTitle: "Edit Profile", errorMessage: "This username is already taken." });
+        if(username !== searchUsername){
+            return res.status(400).render("edit-profile", { pageTitle: "Edit Profile", errorMessage: "User is already exists." });
+        };
     };
+
     const existsEmail = await User.exists({email});
     if(existsEmail){
-        return res.status(400).render("edit-profile", { pageTitle: "Edit Profile", errorMessage: "This email is already taken." });
+        if(email !== searchEmail){
+            return res.status(400).render("edit-profile", { pageTitle: "Edit Profile", errorMessage: "Email is already exists." });
+        };
     };
 
     await User.findByIdAndUpdate(_id, {
         name, email, username, location,
     });
+    
     const updatedUser = await User.findByIdAndUpdate(
         _id, 
         {
@@ -193,8 +192,15 @@ export const postChangePassword = async (req, res) => {
 
 export const see = async (req, res) => {
     const { id } = req.params;
-    const user = await User.findById(id).populate("videos");
-
+    const user = await User.findById(id).populate({
+        path: "videos",
+        populate: {
+            path: "owner",
+            model: "User",
+        },
+    });
+    console.log(id);
+    console.log(user);
     if(!user){
         return res.status(404).render("404", { pageTitle: "User not found." });
     }

@@ -2,6 +2,7 @@ const { default: fetch } = require("node-fetch");
 
 const videoContainer = document.getElementById("videoContainer");
 const form = document.getElementById("commentForm");
+const delBtn = document.querySelectorAll(".video__comment-delBtn");
 
 const addComment = (text, id) => {
     const videoComments = document.querySelector(".video__comments ul");
@@ -11,9 +12,12 @@ const addComment = (text, id) => {
     const icon = document.createElement("i");
     icon.className = "fas fa-comment";
     const span = document.createElement("span");
+    span.classList = "commentText";
     span.innerText = ` ${text}`;
     const span2 = document.createElement("span");
+    span2.classList = "video__comment-delBtn";
     span2.innerText = "❌";
+    span2.addEventListener("click", handleDelete);
     newComment.appendChild(icon);
     newComment.appendChild(span);
     newComment.appendChild(span2);
@@ -42,9 +46,28 @@ const handleSubmit = async (event) => {
     }
 };
 
+const handleDelete = async (event) => {
+    const comment = event.target.parentElement;
+    const commentId = comment.dataset.id;
+    const response = await fetch(`/api/comments/${commentId}/delete`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type" : "application/json"
+        },
+        body : JSON.stringify({ commentId }),
+    });
+    if(response.status === 201){
+        comment.remove();
+    }
+}
+
 if(form) {
     form.addEventListener("submit", handleSubmit);
 }
+
+delBtn.forEach((item) => {
+    item.addEventListener("click", handleDelete);
+})
 
 // challenge
 // const delete = await fetch(`/api/comments/%{commentId}`, {
@@ -52,9 +75,6 @@ if(form) {
 //   ~~~~~~~~
 // })
 //
-// route.delete("/sdasdas", function)
-//
 // * click event listener.
-// 1st - 사용자가 아니면 x버튼이 보이지 않게 한다.
 // 2nd - 사용자가 댓글 작성자가 맞는지 확인한다.
 // 3rd - 모든 절차가 맞다면 삭제하도록 한다.
